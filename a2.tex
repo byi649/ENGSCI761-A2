@@ -1,0 +1,148 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[a4paper, total={6in, 9in}]{geometry}
+\usepackage[latin1]{inputenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{mathtools}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage[usenames, dvipsnames]{color}
+\usepackage{fancyhdr}
+\usepackage{enumitem}
+\usepackage{listings}
+\usepackage[nocomma]{optidef}
+\setlength{\headheight}{15.2pt}
+\pagestyle{fancy}
+\setlength{\parindent}{0em}
+\setlength{\parskip}{10pt}
+\setlist[enumerate,1]{label=\alph*)}
+\setlist[enumerate,2]{label=(\roman*)}
+\definecolor{LGray}{gray}{0.9}
+\definecolor{DGray}{gray}{0.4}
+\usepackage{inconsolata}
+\usepackage[T1]{fontenc}
+\lstset{language=Matlab, tabsize=2, breaklines=true, postbreak=\mbox{\textcolor{red}{$\hookrightarrow$}\space}, basicstyle=\linespread{0.7}\ttfamily, commentstyle=\color{DGray}} 
+\newcommand*\diff{\mathop{}\!\mathrm{d}}
+
+
+
+\begin{document}
+\title{ENGSCI761 A2}
+\author{Benjamin Yi}
+\rhead{Benjamin Yi - byi649 - 925302651}
+\lhead{ENGSCI761 A2}
+	
+\section*{Question 1}
+\begin{enumerate}
+\item
+Let \(u_{jk}\) be 1 if item type \(k\) exists in bin \(j\) and 0 otherwise. Let \(I_k\) be the set of items with type \(k\).
+
+We then add two new constraints:
+
+\begin{align}
+	\text{M}u_{jk} &\geq \sum_{i \in I_k} y_{ij} &&\forall j, k \\
+	\sum_k u_{jk} & \geq 1 &&\forall j \\
+	&u_{jk} \quad \text{binary}
+\end{align}
+
+where M is some sufficiently large number. (1) enforces the definition of \(u_{jk}\), and (2) keeps the number of different types in each bin greater than zero.
+
+The second objective function is then:
+\begin{equation*}
+	\text{C}_2 = \sum_j \bigg(\bigg(\sum_k u_{jk}\bigg)-1\bigg)
+\end{equation*}
+
+\item 
+\(\mathcal{W} = 12\), \(\mathcal{T} = 3\), \(\lambda = 0.01\)
+
+Wastage is integer, so the smallest distance between wastage objective values is 1.\\
+The highest possible value for \(\mathcal{T}\) is (number of bins) * (number of item types - 1), which corresponds to the allocation where all bins contains all item types. For problem data 1, this is \(10 * 4 = 40\). The lowest possible value is 0, which corresponds to the allocation where one bin contains all items. This means the greatest difference in \(\mathcal{T}\) is 40.
+
+Therefore we require \(1 > \lambda * 40 \rightarrow \lambda < \frac{1}{40}\) so the first objective will always be a priority over the second objective. \(\lambda = 0.01\) was chosen as it fulfills the above condition and is also not so small as to induce numerical error.
+
+\item 
+The epsilon-constraint method was used to solve this bi-objective integer problem as it will find all efficient solutions, even the non-supported ones. I assume the set of efficient solutions is not very large - that it can be enumerated within a reasonable time-frame.
+
+The IP for minimising wastage only is solved, and \(\mathcal{T}\) is recorded. \(\mathcal{T}\) is then constrained to be less than the previous solution's \(\mathcal{T}\) and the IP is re-solved. This repeats until \(\mathcal{T}\) is negative or the problem becomes infeasible. The solutions found make up the set of efficient solutions for the bi-objective problem.
+
+The implementation can be run via \lstinline|> python bin_pack_MO_bi.py| with no supporting files needed.
+
+The objective function values for all efficient (not including weakly efficient) solutions are:
+\begin{table}[H]
+	\centering
+\begin{tabular}{|c|c|}
+	\hline 
+	W & T \\ 
+	\hline 
+	0 & 7 \\ 
+	\hline 
+	25 & 3 \\ 
+	\hline 
+	50 & 2 \\ 
+	\hline 
+	75 & 1 \\ 
+	\hline 
+	100 & 0 \\ 
+	\hline 
+\end{tabular}
+\end{table} 
+The solution that minimises waste (\(\mathcal{W} = 0\)): 
+\begin{table}[H]
+\centering
+\begin{tabular}{|c|c|}
+	\hline 
+	Bin & Items \\ 
+	\hline 
+	1 & 3, 15, 16 \\ 
+	\hline 
+	2 & 6, 8, 9, 12 \\ 
+	\hline 
+	3 & 2, 7, 11 \\ 
+	\hline 
+	4 & 1, 20 \\ 
+	\hline 
+	5 & 5, 10, 17, 18 \\ 
+	\hline 
+	7 & 4, 13, 14, 19\\ 
+	\hline 
+\end{tabular}
+\end{table}
+The next solution (\(\mathcal{W} = 25\)):
+\begin{table}[H]
+	\centering
+\begin{tabular}{|c|c|}
+	\hline 
+	Bin & Items \\ 
+	\hline 
+	1 & 2, 9, 10, 12, 18 \\ 
+	\hline 
+	2 & 3, 5, 13, 14 \\ 
+	\hline 
+	3 & 1, 6 \\ 
+	\hline 
+	4 & 11, 19, 20 \\ 
+	\hline 
+	5 & 15, 16 \\ 
+	\hline 
+	6 & 4, 8, 17 \\ 
+	\hline 
+	7 & 7 \\ 
+	\hline 
+\end{tabular} 
+\end{table}
+
+\item 
+Introduce another objective \(\text{C}_3\) that minimises the maximum number of different types of items in each bin.
+
+This is done by adding a new variable:
+\begin{equation*}
+	m \geq \sum_k u_{jk} \quad \forall j
+\end{equation*}
+so:
+\begin{equation*}
+\text{C}_3 = \text{minimise } m
+\end{equation*}
+\end{enumerate}
+\end{document}
+
