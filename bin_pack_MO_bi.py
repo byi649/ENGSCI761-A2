@@ -25,14 +25,13 @@ def formulate(bpp):
                                  cat=LpBinary)
   use_vars    = LpVariable.dicts("x", bpp.BINS, cat=LpBinary)
   waste_vars  = LpVariable.dicts("w", bpp.BINS, 0, None)
-
   unique_vars = LpVariable.dicts("u",
                                  [(j, k) for j in bpp.BINS
                                          for k in bpp.TYPES],
                                  cat=LpBinary)
 
-  weight = 0.01
-  prob += lpSum(waste_vars[j] for j in bpp.BINS) + weight*lpSum( lpSum(unique_vars[j, k] for k in bpp.TYPES) - 1 for j in bpp.BINS ), "lexi"
+  scale = 0.01
+  prob += lpSum(waste_vars[j] for j in bpp.BINS) + scale * lpSum( lpSum(unique_vars[j, k] for k in bpp.TYPES) - 1 for j in bpp.BINS ), "min_waste"
 
   M = 1e3
   for j in bpp.BINS:
@@ -43,7 +42,10 @@ def formulate(bpp):
   # Enforce number of unique types >= 1 so having zero items is not rewarded
   for j in bpp.BINS:
     prob += lpSum(unique_vars[j, k] for k in bpp.TYPES) >= 1
- 
+
+  # Bi-objective constraint
+  prob += lpSum( lpSum(unique_vars[j, k] for k in bpp.TYPES) - 1 for j in bpp.BINS ) <= 1e3, "mixed"
+
   for j in bpp.BINS:
     prob += lpSum(bpp.volume[i] * assign_vars[i, j] for i in bpp.ITEMS) \
             + waste_vars[j] == bpp.capacity * use_vars[j]
@@ -60,7 +62,7 @@ def formulate(bpp):
   prob.use_vars = use_vars
   prob.waste_vars = waste_vars
   prob.unique_vars = unique_vars
-
+      
   return prob
 
 
@@ -109,29 +111,31 @@ def eval_objective(prob,bpp):
 
 
 if __name__ == '__main__':
-  # 10 items
-  itms = range(10)
-  vols = [4, 3, 12, 3, 15, 5, 2, 2, 15, 2]
-  typs = [5, 1, 1, 5, 2, 5, 5, 1, 3, 4]
+  # 20 items 	
+  itms = range(20)
+  vols = [11, 11, 5, 9, 7, 13, 13, 7, 2, 8, 1, 3, 8, 1, 8, 12, 9, 1, 7, 14]
+  typs = [5, 2, 7, 5, 6, 5, 1, 5, 2, 2, 1, 2, 7, 7, 3, 3, 2, 2, 4, 1]
   Cap = 25
   max_type = max(typs)
-
   
   bpp = BinPackProb(ITEMS  = itms,
                   volume = vols,
-		  types = typs,
+                  types = typs,
                   capacity = Cap,
                   no_types = max_type)
 
   prob = formulate(bpp)
 
-  # Using Gurobi as solver - first add Gurobi to system path, see instructions
-  status = solve(prob,"Gurobi",1) # arguments: problem, solver type (Gurobi), 1 for output; 0 for no output
+  status = solve(prob,"Gurobi",0) # arguments: problem, solver type (Gurobi), 1 for output; 0 for no output
+  wasted_space = eval_objective(prob,bpp)
+  print "un-weighted objective value calculated based on decision variables is: " + str(wasted_space)
 
-  if LpStatus[status] == 'Optimal':
-    print "objective value of optimal solution is: " + str(int(round(value(prob.objective))))
+  while LpStatus[status] == 'Optimal' and wasted_space[1] > 0:
+    prob.constraints['mixed'] = lpSum( lpSum(prob.unique_vars[j, k] for k in bpp.TYPES) - 1 for j in bpp.BINS ) <= wasted_space[1] - 1
+    print "New RHS:", wasted_space[1] - 1
+    status = solve(prob,"Gurobi",0)
+
     wasted_space = eval_objective(prob,bpp)
     print "un-weighted objective value calculated based on decision variables is: " + str(wasted_space)
+    
 
-
- 
