@@ -46,7 +46,7 @@ We then add two new constraints:
 	&u_{jk} \quad \text{binary}
 \end{align}
 
-where M is some sufficiently large number. (1) enforces the definition of \(u_{jk}\), and (2) keeps the number of different types in each bin greater than zero.
+where M is some sufficiently large number. (1) enforces the definition of \(u_{jk}\). Because \(\sum_k(u_{jk}) - 1\) counts the number of different types of items in bin \(j\), (2) prevents empty bins from affecting the objective function.
 
 The second objective function is then:
 \begin{equation*}
@@ -57,9 +57,9 @@ The second objective function is then:
 \(\mathcal{W} = 12\), \(\mathcal{T} = 3\), \(\lambda = 0.01\)
 
 Wastage is integer, so the smallest distance between wastage objective values is 1.\\
-The highest possible value for \(\mathcal{T}\) is (number of bins) * (number of item types - 1), which corresponds to the allocation where all bins contains all item types. For problem data 1, this is \(10 * 4 = 40\). The lowest possible value is 0, which corresponds to the allocation where one bin contains all items. This means the greatest difference in \(\mathcal{T}\) is 40.
+The highest possible value for \(\mathcal{T}\) is (number of bins) * (number of item types - 1), which corresponds to the allocation where all bins contains all item types. For problem data 1, this is \(10 * 4 = 40\) as max(number of bins) = (number of items). The lowest possible value is 0, which corresponds to the allocation where one bin contains all items. This means the greatest difference in \(\mathcal{T}\) is 40.
 
-Therefore we require \(1 > \lambda * 40 \rightarrow \lambda < \frac{1}{40}\) so the first objective will always be a priority over the second objective. \(\lambda = 0.01\) was chosen as it fulfills the above condition and is also not so small as to induce numerical error.
+Therefore it is sufficient (but not necessary) that \(1 > \lambda * 40 \rightarrow \lambda < \frac{1}{40}\) so the first objective will always be a priority over the second objective. \(\lambda = 0.01\) was chosen as it fulfills the above condition and is also not so small as to induce numerical error.
 
 \item 
 The epsilon-constraint method was used to solve this bi-objective integer problem as it will find all efficient solutions, even the non-supported ones. I assume the set of efficient solutions is not very large - that it can be enumerated within a reasonable time-frame.
@@ -139,7 +139,7 @@ This is done by adding a new variable:
 \begin{equation*}
 	m \geq \sum_k u_{jk} \quad \forall j
 \end{equation*}
-so:
+with objective function:
 \begin{equation*}
 \text{C}_3 = \text{minimise } m
 \end{equation*}
