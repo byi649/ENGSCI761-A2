@@ -11,7 +11,6 @@
 \usepackage{fancyhdr}
 \usepackage{enumitem}
 \usepackage{listings}
-\usepackage[nocomma]{optidef}
 \setlength{\headheight}{15.2pt}
 \pagestyle{fancy}
 \setlength{\parindent}{0em}
@@ -54,12 +53,12 @@ The second objective function is then:
 \end{equation*}
 
 \item 
-\(\mathcal{W} = 12\), \(\mathcal{T} = 3\), \(\lambda = 0.01\)
+\(\mathcal{W} = 0\), \(\mathcal{T} = 7\), \(\lambda = 0.01\)
 
 Wastage is integer, so the smallest distance between wastage objective values is 1.\\
-The highest possible value for \(\mathcal{T}\) is (number of bins) * (number of item types - 1), which corresponds to the allocation where all bins contains all item types. For problem data 1, this is \(10 * 4 = 40\) as max(number of bins) = (number of items). The lowest possible value is 0, which corresponds to the allocation where one bin contains all items. This means the greatest difference in \(\mathcal{T}\) is 40.
+The highest possible value for \(\mathcal{T}\) is (number of bins) * (number of item types - 1), which corresponds to the allocation where all bins contains all item types. For problem data m=20, this is \(20 * 4 = 80\) as max(number of bins) = (number of items). The lowest possible value is 0, which corresponds to the allocation where one bin contains all items. This means the greatest difference in \(\mathcal{T}\) is 80.
 
-Therefore it is sufficient (but not necessary) that \(1 > \lambda * 40 \rightarrow \lambda < \frac{1}{40}\) so the first objective will always be a priority over the second objective. \(\lambda = 0.01\) was chosen as it fulfills the above condition and is also not so small as to induce numerical error.
+Therefore it is sufficient (but not necessary) that \(1 > \lambda * 80 \rightarrow \lambda < \frac{1}{80}\) so the first objective will always be a priority over the second objective. \(\lambda = 0.01\) was chosen as it fulfills the above condition and is also not so small as to induce numerical error.
 
 \item 
 The epsilon-constraint method was used to solve this bi-objective integer problem as it will find all efficient solutions, even the non-supported ones. I assume the set of efficient solutions is not very large - that it can be enumerated within a reasonable time-frame.
